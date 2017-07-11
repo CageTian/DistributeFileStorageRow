@@ -40,7 +40,7 @@ public class FileClient  {
         else {
             FileClient fileClient = new FileClient(new File("resource//client1.properties"));
             switch (args[0]) {
-                case "-d"://-d 7ac89900-138e-41bf-8641-eeddb2e553eb D:\HomeWork\Client
+                case "-d"://-d 6ec6ed46-dd0e-4d3c-a8b5-12837444a7d5 D:\HomeWork\Client
                     fileClient.download(args[1], args[2]);
                     break;
                 case "-r":

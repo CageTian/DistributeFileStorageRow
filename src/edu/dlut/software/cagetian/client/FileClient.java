@@ -65,7 +65,8 @@ public class FileClient  {
         Socket socket;
         try {
             socket = new Socket(serverIP, server_port);
-            fileInfo = getServerMes(socket, 'u', String.valueOf(file.length()));
+            fileInfo = getServerMes(socket, 'u', file.getName() + "#" +
+                    String.valueOf(file.length()));
             fileInfo.setFile_size(file.length());
             System.out.println(fileInfo);
         } catch (Exception e) {

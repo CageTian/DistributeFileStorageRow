@@ -34,7 +34,8 @@ public class ClientService implements Runnable {
             ArrayList<StorageNode> list = fileServer.getNode_info();
             switch (request){
                 case 'u'://upload
-                    long fileSize = Long.parseLong(dis.readUTF());//get file size;
+                    String[] info = dis.readUTF().split("#");
+                    long fileSize = Long.parseLong(info[1]);//get file size;
                     System.out.println(fileSize);
 
                     Collections.sort(list, new Comparator<StorageNode>() {
@@ -50,7 +51,7 @@ public class ClientService implements Runnable {
                         if (nrest1 > 0 && nrest2 > 0) {
                             list.get(0).setRestVolume(nrest1);
                             list.get(1).setRestVolume(nrest2);
-                            fileInfo = new FileInfo(UUID.randomUUID().toString(), fileSize, list.get(0), list.get(1));
+                            fileInfo = new FileInfo(UUID.randomUUID().toString(), info[0], fileSize, list.get(0), list.get(1));
                             fileServer.getFile_info().put(fileInfo.getFile_id(), fileInfo);
                             System.out.println(fileInfo.getFile_id());
                         }

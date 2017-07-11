@@ -51,6 +51,7 @@ public class StorageNode implements Serializable{
     }
     public StorageNode(File f) throws IOException {
         getProperties(f);
+
         this.file_info_map = getAllFile(this.rootFolder, new HashMap<>());
     }
     public StorageNode(String nodeName){
@@ -86,7 +87,7 @@ public class StorageNode implements Serializable{
      * 通知Server是否运行
      */
     public void notifyServer() {
-        new Thread(new notifyService(this, 3000)).start();
+        new Thread(new notifyServerService(this, 3000)).start();
     }
 
     /**
@@ -107,6 +108,7 @@ public class StorageNode implements Serializable{
         nodePort=Integer.parseInt(pps.getProperty("NodePort"));
         rootFolder=pps.getProperty("RootFolder");
         volume=Long.parseLong(pps.getProperty("Volume"));
+        restVolume = Long.parseLong(pps.getProperty("RestVolume"));
         fileServerIP=pps.getProperty("FileServerIP");
         fileServerPort=Integer.parseInt(pps.getProperty("FileServerPort"));
     }

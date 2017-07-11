@@ -8,12 +8,12 @@ import java.net.InetAddress;
 /**
  * Created by CageTian on 2017/7/7.
  */
-public class notifyService implements Runnable {
+public class notifyServerService implements Runnable {
     private StorageNode storageNode;
     private int serverPort;
     private String message;
 
-    public notifyService(StorageNode storageNode,int serverPort) {
+    public notifyServerService(StorageNode storageNode, int serverPort) {
         this.serverPort=serverPort;
         this.storageNode=storageNode;
         this.message=storageNode.getNodeName()+'#'+storageNode.getNodeIP()

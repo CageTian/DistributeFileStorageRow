@@ -59,73 +59,62 @@ public class FileClient  {
 //        System.out.println(new FileClient(1234));
     }
 
-    public void upload(String file_path){
+    public void upload(String file_path) {
+        File file = new File(file_path);
+        FileInfo fileInfo;
+        Socket socket;
         try {
-            File file=new File(file_path);
-            Socket socket = new Socket(serverIP, server_port);
-            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-            FileInfo fileInfo = getServerMes(socket, dos, 'u', file.getName());
+            socket = new Socket(serverIP, server_port);
+            fileInfo = getServerMes(socket, 'u', String.valueOf(file.length()));
             fileInfo.setFile_size(file.length());
-
             System.out.println(fileInfo);
-            //connect main node
-            socket=new Socket(fileInfo.getMain_node().getNodeIP(),
-                    fileInfo.getMain_node().getNodePort());
-//            dos=new DataOutputStream(socket.getOutputStream());
-            ObjectOutputStream oos=new ObjectOutputStream(socket.getOutputStream());
-            FileInputStream fis = new FileInputStream(file);
-
-            // 文件名和长度
-            oos.writeChar('u');
-            oos.flush();
-            oos.writeObject(fileInfo);
-            oos.flush();
-//            dos.writeUTF(file.getName());
-//            dos.flush();
-//            dos.writeLong(file.length());
-//            dos.flush();
-            // 开始传输文件
-            System.out.println("======== 开始传输文件 ========");
-            byte[] bytes = new byte[1024];
-            int length;
-            long progress = 0;
-            while ((length = fis.read(bytes, 0, bytes.length)) != -1) {
-//                bytes = Tool.quickEncrypt(bytes);
-                oos.write(bytes, 0, length);
-                oos.flush();
-                progress += length;
-                System.out.print("| " + (100 * progress / file.length()) + "% |");
-            }
-            System.out.println();
-            System.out.println("======== 文件传输成功 ========");
-            oos.close();
-            socket.close();
-        }catch (Exception e){
-            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("fail to connect server to get update information.please retry");
+            return;
         }
+        try {
+            send(fileInfo, file, fileInfo.getMain_node());
+        }catch (Exception e){
+            try {
+                send(fileInfo, file, fileInfo.getSec_node());
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+
+        }
+        //connect main node
     }
 
-    private FileInfo getServerMes(Socket socket,DataOutputStream dos,char ch,String uName)throws Exception{
-
-        ObjectInputStream ois=new ObjectInputStream(socket.getInputStream());
-        dos.writeChar(ch);
-        dos.flush();
-        dos.writeUTF(uName);
-        dos.flush();
-        FileInfo fileInfo=(FileInfo)ois.readObject();
-        fileInfo.setClient_name(client_name);
-        dos.close();
-        ois.close();
+    private void send(FileInfo fileInfo, File file, StorageNode node) throws Exception {
+        Socket socket = new Socket(node.getNodeIP(), node.getNodePort());
+        ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+        FileInputStream fis = new FileInputStream(file);
+        // 文件名和长度
+        oos.writeChar('u');
+        oos.flush();
+        oos.writeObject(fileInfo);
+        oos.flush();
+        System.out.println("======== 开始传输文件 ========");
+        byte[] bytes = new byte[1024];
+        int length;
+        long progress = 0;
+        while ((length = fis.read(bytes, 0, bytes.length)) != -1) {
+//                bytes = Tool.quickEncrypt(bytes);
+            oos.write(bytes, 0, length);
+            oos.flush();
+            progress += length;
+            System.out.print("| " + (100 * progress / file.length()) + "% |");
+        }
+        System.out.println();
+        System.out.println("======== 文件传输成功 ========");
+        oos.close();
         socket.close();
-        return fileInfo;
-
     }
 
-    public void remove(String uuid) throws Exception {
+    private void remove(String uuid) throws Exception {
         Socket socket=new Socket(serverIP,server_port);
-        DataOutputStream dos=new DataOutputStream(socket.getOutputStream());
-        FileInfo fileInfo=getServerMes(socket,dos,'r',uuid);
-        dos.close();
+
+        FileInfo fileInfo = getServerMes(socket, 'r', uuid);
 
         StorageNode firstNode=fileInfo.getMain_node();
         socket=new Socket(firstNode.getNodeIP(),firstNode.getNodePort());
@@ -140,15 +129,35 @@ public class FileClient  {
         socket.close();
     }
 
-    public void download(String uuid,String file_path) throws Exception {
-        File directory=new File(file_path);
-        Socket socket = new Socket(serverIP, server_port);
-        DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-        FileInfo fileInfo=getServerMes(socket,dos,'d',uuid);
-        dos.close();
-        socket=new Socket(fileInfo.getMain_node().getNodeIP(),
-                fileInfo.getMain_node().getNodePort());
+    public void download(String uuid, String file_path) {
+        File directory;
+        Socket socket;
+        FileInfo fileInfo;
+        try {
 
+            directory = new File(file_path);
+            socket = new Socket(serverIP, server_port);
+            fileInfo = getServerMes(socket, 'd', uuid);
+        } catch (Exception e) {
+            System.out.println("fail to connect server to get update information.please retry");
+            return;
+        }
+        try {
+            receive(fileInfo, uuid, directory, fileInfo.getMain_node());
+        } catch (Exception e) {
+            try {
+                receive(fileInfo, uuid, directory, fileInfo.getSec_node());
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+
+        }
+
+    }
+
+    private void receive(FileInfo fileInfo, String uuid, File directory,
+                         StorageNode node) throws Exception {
+        Socket socket = new Socket(node.getNodeIP(), node.getNodePort());
         ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
         oos.writeChar('d');
         oos.flush();
@@ -158,7 +167,7 @@ public class FileClient  {
         oos.flush();
 
         ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-        String fileid = ois.readUTF();
+        String file_id = ois.readUTF();
         Long fileLength = ois.readLong();
         if (!directory.exists()) {
             directory.mkdir();
@@ -179,6 +188,22 @@ public class FileClient  {
         fos.close();
         ois.close();
         socket.close();
+    }
+
+    private FileInfo getServerMes(Socket socket, char ch, String uName) throws Exception {
+        DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+        ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+        dos.writeChar(ch);
+        dos.flush();
+        dos.writeUTF(uName);
+        dos.flush();
+        FileInfo fileInfo = (FileInfo) ois.readObject();
+        fileInfo.setClient_name(client_name);
+        dos.close();
+        ois.close();
+        socket.close();
+        return fileInfo;
+
     }
 
     private void getProperties(File prop_file) throws IOException {

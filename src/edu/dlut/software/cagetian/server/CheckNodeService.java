@@ -2,7 +2,6 @@ package edu.dlut.software.cagetian.server;
 
 import edu.dlut.software.cagetian.storagenode.StorageNode;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -18,21 +17,18 @@ public class CheckNodeService implements Runnable {
     public void run() {
         try {
             while (true){
-                HashMap<StorageNode,Integer> map= fileServer.getNode_statue();
-                ArrayList<StorageNode> node_list=fileServer.getNode_info();
-
-                for(StorageNode k:map.keySet()){
+                Thread.sleep(20000);
+                HashMap<String, Integer> map = fileServer.getNode_statue();
+                for (String k : map.keySet()) {
                     if(map.get(k)==1){
                         map.put(k,0);
-                        if(!node_list.contains(k)) {
-                            node_list.add(k);
-                        }
+                    } else if (map.get(k) == 0) {
+                        boolean b = fileServer.getNode_info().remove(new StorageNode(k));
+                        if (b)
+                            System.out.println(k + " down");
                     }
-//                    else if(map.get(k)==0){
-//                        fileServer.getNode_info().remove(k);
-//                    }
                 }//statue delete items
-                Thread.sleep(5000);
+
             }
 
         } catch (Exception e) {

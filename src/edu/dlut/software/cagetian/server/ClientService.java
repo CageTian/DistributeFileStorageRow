@@ -30,28 +30,52 @@ public class ClientService implements Runnable {
             ObjectOutputStream oos=new ObjectOutputStream(socket.getOutputStream());
             char request=dis.readChar();
             FileInfo fileInfo=null;
+            String uuid_str;
+            ArrayList<StorageNode> list = fileServer.getNode_info();
             switch (request){
                 case 'u'://upload
-                    String fileName=dis.readUTF();
-                    System.out.println(fileName);
-                    ArrayList<StorageNode> list=fileServer.getNode_info();
+                    long fileSize = Long.parseLong(dis.readUTF());//get file size;
+                    System.out.println(fileSize);
+
                     Collections.sort(list, new Comparator<StorageNode>() {
                         @Override
                         public int compare(StorageNode o1, StorageNode o2) {
                             return (int)(o1.getRestVolume()-o2.getRestVolume());
                         }
                     });
-                    //判断文件大小
-                    fileInfo = new FileInfo(UUID.randomUUID().toString(), fileName, list.get(0), list.get(1));
-                    fileServer.getFile_info().put(fileInfo.getFile_id(), fileInfo);
+                    //负载均衡
+                    try {
+                        long nrest1 = list.get(0).getRestVolume() - fileSize;
+                        long nrest2 = list.get(1).getRestVolume() - fileSize;
+                        if (nrest1 > 0 && nrest2 > 0) {
+                            list.get(0).setRestVolume(nrest1);
+                            list.get(1).setRestVolume(nrest2);
+                            fileInfo = new FileInfo(UUID.randomUUID().toString(), fileSize, list.get(0), list.get(1));
+                            fileServer.getFile_info().put(fileInfo.getFile_id(), fileInfo);
+                            System.out.println(fileInfo.getFile_id());
+                        }
+                    } catch (IndexOutOfBoundsException e) {
+                        System.out.println("System not ready or have less than two nodes remain");
+                    }
                     //exception node not enough
-                    System.out.println(fileInfo.getFile_id());
                     break;
                 case 'd'://download
                     System.out.println("download");
-                case 'r'://remove
-                    String uuid_str=dis.readUTF();
+                    uuid_str = dis.readUTF();
                     fileInfo = fileServer.getFile_info().get(uuid_str);
+                    break;
+                case 'r'://remove
+                    System.out.println("remove");
+                    uuid_str = dis.readUTF();
+                    fileInfo = fileServer.getFile_info().get(uuid_str);
+                    fileServer.getFile_info().remove(uuid_str);
+                    //recover the rest volume
+                    StorageNode n1 = fileInfo.getMain_node();
+                    StorageNode n2 = fileInfo.getSec_node();
+                    n1.setRestVolume(n1.getRestVolume() + fileInfo.getFile_size());
+                    n2.setRestVolume(n2.getRestVolume() + fileInfo.getFile_size());
+                    list.set(list.indexOf(n1), n1);
+                    list.set(list.indexOf(n2), n2);
                     break;
                 default:
                     break;

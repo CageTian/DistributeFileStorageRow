@@ -46,11 +46,16 @@ public class StorageClientService implements Runnable {
      */
     private void backUpToBNode(FileInfo fileInfo) throws Exception {
         StorageNode bNode=fileInfo.getSec_node();
-        Socket node_socket=new Socket(bNode.getNodeIP(),bNode.getNodePort());
-        ObjectOutputStream oos=new ObjectOutputStream(node_socket.getOutputStream());
-        oos.writeChar('b');
-        oos.writeObject(fileInfo);
-        send(fileInfo.getFile(), oos);
+        if (!bNode.equals(storageNode)) {
+            Socket node_socket = new Socket(bNode.getNodeIP(), bNode.getNodePort());
+            ObjectOutputStream oos = new ObjectOutputStream(node_socket.getOutputStream());
+            oos.writeChar('b');
+            oos.writeObject(fileInfo);
+            send(fileInfo.getFile(), oos);
+        } else {
+            System.out.println("received file but last node have some problems");
+        }
+
     }
 
     private void receiveBackUp(ObjectInputStream ois) throws Exception {

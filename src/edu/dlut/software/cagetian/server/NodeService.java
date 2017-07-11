@@ -1,5 +1,7 @@
 package edu.dlut.software.cagetian.server;
+
 import edu.dlut.software.cagetian.storagenode.StorageNode;
+
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 /**
@@ -27,7 +29,11 @@ public class NodeService implements Runnable {
                 if(s_tmp.length>=4){
                     StorageNode storageNode=new StorageNode(s_tmp[0],s_tmp[1],
                             Integer.parseInt(s_tmp[2]),Long.parseLong(s_tmp[3]));
-                    fileServer.getNode_statue().put(storageNode,1);
+                    fileServer.getNode_statue().put(storageNode.getNodeName(), 1);
+                    if (!fileServer.getNode_info().contains(storageNode)) {
+                        fileServer.getNode_info().add(storageNode);
+                        System.out.println(storageNode.getNodeName() + " up");
+                    }
                 }
 
             }

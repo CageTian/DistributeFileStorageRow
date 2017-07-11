@@ -16,7 +16,7 @@ import java.util.Scanner;
 public class FileServer implements Serializable{
     private ArrayList<StorageNode> node_info;
     private HashMap<String,FileInfo>file_info;
-    private HashMap<StorageNode,Integer>node_statue;
+    private HashMap<String, Integer> node_statue;
     private String ip;
     private int port;
     FileServer (int port){
@@ -110,11 +110,11 @@ public class FileServer implements Serializable{
         this.file_info = file_info;
     }
 
-    public HashMap<StorageNode, Integer> getNode_statue() {
+    public HashMap<String, Integer> getNode_statue() {
         return node_statue;
     }
 
-    public void setNode_statue(HashMap<StorageNode, Integer> node_statue) {
+    public void setNode_statue(HashMap<String, Integer> node_statue) {
         this.node_statue = node_statue;
     }
 }

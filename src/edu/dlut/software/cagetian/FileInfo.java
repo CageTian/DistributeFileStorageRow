@@ -17,14 +17,31 @@ public class FileInfo implements Serializable{
     private File file;
     private String client_name;
 
-    public FileInfo(String file_id, StorageNode main_node, StorageNode sec_node) {
+    public FileInfo() {
+    }
+
+    public FileInfo(String file_id, String file_name, StorageNode main_node, StorageNode sec_node) {
         this.file_id = file_id;
+        this.file_name = file_name;
         this.main_node = main_node;
         this.sec_node = sec_node;
     }
 
+    public static FileInfo getNodeInitInstance(String file_id, String client_name, long file_size, File file) {
+        FileInfo fileInfo = new FileInfo();
+        fileInfo.setFile_id(file_id);
+        fileInfo.setClient_name(client_name);
+        fileInfo.setFile_size(file_size);
+        fileInfo.setFile(file);
+        return fileInfo;
+    }
+
     public String getFile_id() {
         return file_id;
+    }
+
+    public void setFile_id(String file_id) {
+        this.file_id = file_id;
     }
 
     public String getClient_name() {
@@ -33,10 +50,6 @@ public class FileInfo implements Serializable{
 
     public void setClient_name(String client_name) {
         this.client_name = client_name;
-    }
-
-    public void setFile_id(String file_id) {
-        this.file_id = file_id;
     }
 
     public String getFile_name() {
@@ -67,16 +80,16 @@ public class FileInfo implements Serializable{
         return sec_node;
     }
 
+    public void setSec_node(StorageNode sec_node) {
+        this.sec_node = sec_node;
+    }
+
     public File getFile() {
         return file;
     }
 
     public void setFile(File file) {
         this.file = file;
-    }
-
-    public void setSec_node(StorageNode sec_node) {
-        this.sec_node = sec_node;
     }
 
     @Override

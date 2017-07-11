@@ -3,14 +3,12 @@ package edu.dlut.software.cagetian.server;
 import edu.dlut.software.cagetian.FileInfo;
 import edu.dlut.software.cagetian.storagenode.StorageNode;
 
-import java.io.FileInputStream;
-import java.io.ObjectInputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.UUID;
+import java.util.Scanner;
 
 /**
  * Created by CageTian on 2017/7/6.
@@ -28,33 +26,56 @@ public class FileServer implements Serializable{
         node_info=new ArrayList<>();
     }
 
+    public static void saveMainClassInstance(String path, FileServer fileServer) {
+        try {
+            ObjectOutputStream out = new ObjectOutputStream
+                    (new FileOutputStream(path));
+            out.writeObject(fileServer);
+            out.close();
+        } catch (Exception e) {
+            System.out.println("fail to save main class instance");
+        }
 
-    public void runNodeACKListenner() throws Exception {
-            new Thread(new NodeService(this)).start();
-            new Thread(new CheckNodeService(this)).start();
     }
+
     public static FileServer getServerInstance() {
         try {
             ObjectInputStream in = new ObjectInputStream
                     (new FileInputStream("D:\\HomeWork\\server_data\\file_server.obj"));
             return (FileServer)in.readObject();
         } catch (Exception e) {
-            System.out.println("no object found");
-
+            System.out.println("no object found,will use new");
+            return new FileServer(6666);
         }
-        return null;
     }
 
     public static void main(String[] args) throws Exception {
-        FileServer fs=new FileServer(6666);
+        Scanner sc = new Scanner(System.in);
+//        FileServer fs=new FileServer(6666);
+        FileServer fs = getServerInstance();
         fs.runNodeACKListenner();
         ServerSocket serverSocket=new ServerSocket(fs.port);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if ("0".equals(sc.nextLine())) {
+                    saveMainClassInstance("D:\\HomeWork\\server_data\\file_server.obj", fs);
+                    System.exit(0);//关闭当前进程。
+                }
+            }
+        }).start();
+
         while(true){
             Socket socket=serverSocket.accept();
-            System.out.println(socket.getInetAddress().toString()+socket.getPort()+" access in:");
+            System.out.println(socket.getInetAddress().toString() + " " + socket.getPort() + " access in:");
             new Thread(new ClientService(socket,fs)).start();
         }
 
+    }
+
+    public void runNodeACKListenner() throws Exception {
+        new Thread(new NodeService(this)).start();
+        new Thread(new CheckNodeService(this)).start();
     }
 
     public ArrayList<StorageNode> getNode_info() {

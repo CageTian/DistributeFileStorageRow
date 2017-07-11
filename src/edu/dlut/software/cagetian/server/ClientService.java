@@ -4,10 +4,12 @@ import edu.dlut.software.cagetian.FileInfo;
 import edu.dlut.software.cagetian.storagenode.StorageNode;
 
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.UUID;
 
 /**
  * Created by CageTian on 2017/7/7.
@@ -40,14 +42,16 @@ public class ClientService implements Runnable {
                         }
                     });
                     //判断文件大小
-                    fileInfo=new FileInfo(UUID.randomUUID().toString(),list.get(0),list.get(1));
+                    fileInfo = new FileInfo(UUID.randomUUID().toString(), fileName, list.get(0), list.get(1));
+                    fileServer.getFile_info().put(fileInfo.getFile_id(), fileInfo);
                     //exception node not enough
                     System.out.println(fileInfo.getFile_id());
                     break;
                 case 'd'://download
+                    System.out.println("download");
                 case 'r'://remove
                     String uuid_str=dis.readUTF();
-                    fileInfo = fileServer.getFile_info().get(UUID.fromString(uuid_str));
+                    fileInfo = fileServer.getFile_info().get(uuid_str);
                     break;
                 default:
                     break;

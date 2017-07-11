@@ -4,7 +4,6 @@ import edu.dlut.software.cagetian.storagenode.StorageNode;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 
 /**
  * Created by CageTian on 2017/7/7.
@@ -29,11 +28,11 @@ public class CheckNodeService implements Runnable {
                             node_list.add(k);
                         }
                     }
-                    else if(map.get(k)==0){
-                        fileServer.getNode_info().remove(k);
-                    }
+//                    else if(map.get(k)==0){
+//                        fileServer.getNode_info().remove(k);
+//                    }
                 }//statue delete items
-                Thread.sleep(20000);
+                Thread.sleep(5000);
             }
 
         } catch (Exception e) {

@@ -1,5 +1,7 @@
 package edu.dlut.software.cagetian.storagenode;
+
 import edu.dlut.software.cagetian.FileInfo;
+
 import java.io.*;
 import java.math.RoundingMode;
 import java.net.ServerSocket;
@@ -37,34 +39,23 @@ public class StorageNode implements Serializable{
         this.nodeIP = nodeIP;
         this.nodePort = nodePort;
         this.restVolume = restVolume;
+        this.file_info_map = new HashMap<>();
     }
 
     public StorageNode(String nodeIP, int nodePort, String rootFolder) {
         this.nodeIP = nodeIP;
-
         this.nodePort = nodePort;
         this.rootFolder = rootFolder;
+        this.file_info_map = new HashMap<>();
+
     }
     public StorageNode(File f) throws IOException {
         getProperties(f);
+        this.file_info_map = getAllFile(this.rootFolder, new HashMap<>());
     }
     public StorageNode(String nodeName){
         this.nodeName=nodeName;
-    }
-
-    /**
-     * 通知Server是否运行
-     */
-    public void notifyServer(){
-        new Thread(new notifyService(this,3000)).start();
-    }
-
-    /**
-     * Download,Upload,BackUp,Remove in new Thread
-     * @param socket
-     */
-    public void clientService(Socket socket){
-        new Thread(new StorageClientService(this,socket)).start();
+        this.file_info_map = new HashMap<>();
     }
 
     public static void main(String[] args) throws IOException {
@@ -79,6 +70,33 @@ public class StorageNode implements Serializable{
 //        System.out.println(storageNode);
     }
 
+    private HashMap<String, FileInfo> getAllFile(String rootFolder, HashMap<String, FileInfo> map) {
+        File directory = new File(rootFolder);
+        if (directory.isDirectory()) {
+            for (File file : directory.listFiles())
+                getAllFile(file.getAbsolutePath(), map);
+        } else if (directory.isFile()) {
+            map.put(directory.getName(), FileInfo.getNodeInitInstance(directory.getName()
+                    , directory.getParentFile().getName(), directory.length(), directory));
+        }
+        return map;
+    }
+
+    /**
+     * 通知Server是否运行
+     */
+    public void notifyServer() {
+        new Thread(new notifyService(this, 3000)).start();
+    }
+
+    /**
+     * Download,Upload,BackUp,Remove in new Thread
+     *
+     * @param socket
+     */
+    public void clientService(Socket socket) {
+        new Thread(new StorageClientService(this, socket)).start();
+    }
 
     private void getProperties(File prop_file) throws IOException {
         Properties pps = new Properties();
